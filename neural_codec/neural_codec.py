@@ -13,8 +13,9 @@ class NeuralCodec(nn.Module):
 
     def forward(self, x):
         z_e = self.encoder(x)
-        z_q = self.vector_quantizer(z_e)
-        return self.decoder(z_q)
+        z_q, loss = self.vector_quantizer(z_e)
+        output = self.decoder(z_q)
+        return output, loss
 
 
 class Encoder(nn.Module):
@@ -40,11 +41,12 @@ class Decoder(nn.Module):
 
 
 class VectorQuantizer(nn.Module):
-    def __init__(self, num_embeddings, emb_dim):
+    def __init__(self, num_embeddings, emb_dim, commitment_weight=1.0):
         super().__init__()
         self.embedding_dim = emb_dim
         self.codebook = nn.Embedding(num_embeddings, emb_dim)
         self.codebook.weight.data.uniform_(-1 / emb_dim, 1 / emb_dim)
+        self.commitment_weight = commitment_weight
 
     def forward(self, z_e: torch.Tensor):
         (batch_size, time_seq, num_frames) = z_e.shape
@@ -63,8 +65,12 @@ class VectorQuantizer(nn.Module):
         )
         encoding_distances = torch.argmin(distance, dim=-1)
         z_q = self.codebook(encoding_distances)
-        
+
         z_q = z_q.reshape(batch_size, time_seq, num_frames)
-        
-        loss = F.mse_loss(z_q.detach(), z_e) + F.mse_loss(z_q, z_e.detach()) + c
+
+        # first mse loss is codebook loss
+        # second part is commitment loss with a weight to balance the two losses
+        codebook_loss = F.mse_loss(z_q, z_e.detach())
+        commitment_loss = self.commitment_weight * F.mse_loss(z_q.detach(), z_e)
+        loss = codebook_loss + commitment_loss
         return z_q, loss
