@@ -44,3 +44,19 @@ This is used to estimate the velocity for the flows.
 The difference between 'Autoregressive transformer' vs 'Non-autoregressive transformer'
 
 Autoregressive transformer's output will depends only on previous tokens.
+
+
+## Citation
+Original Minimax-Speech paper:
+
+```
+@article{zhang2025minimaxspeech,
+      title={MiniMax-Speech: Intrinsic Zero-Shot Text-to-Speech with a Learnable Speaker Encoder}, 
+      author={Bowen Zhang and Congchao Guo and Geng Yang and Hang Yu and Haozhe Zhang and Heidi Lei and Jialong Mai and Junjie Yan and Kaiyue Yang and Mingqi Yang and Peikai Huang and Ruiyang Jin and Sitan Jiang and Weihua Cheng and Yawei Li and Yichen Xiao and Yiying Zhou and Yongmao Zhang and Yuan Lu and Yucen He},
+      year={2025},
+      eprint={2505.07916},
+      archivePrefix={arXiv},
+      primaryClass={eess.AS},
+      url={https://arxiv.org/abs/2505.07916}, 
+}
+```
