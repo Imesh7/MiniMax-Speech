@@ -1,4 +1,20 @@
+import math
+
 from torch import nn
+import torch
+
+class SinoidalTimeEmbedding(nn.Module):
+    def __init__(self, embedding_dim):
+        super().__init__()
+        self.embedding_dim = embedding_dim
+
+    def forward(self, t):
+        device = t.device
+        half_dim = self.embedding_dim // 2
+        emb = torch.exp(torch.arange(half_dim, device=device) * -(math.log(10000.0) / half_dim))
+        emb = t[:, None] * emb[None, :]
+        emb = torch.cat((torch.sin(emb), torch.cos(emb)), dim=-1)
+        return emb
 
 
 class FlowMatchingModel(nn.Module):
@@ -7,13 +23,22 @@ class FlowMatchingModel(nn.Module):
         self.conv = nn.Conv1d(in_channels, out_channels)
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
         self.transformer_block = TransformerBlock(out_channels, nhead=4)
-        
+        self.time_embedding = nn.Sequential(
+            SinoidalTimeEmbedding(embedding_dim=out_channels),
+            nn.Linear(1, out_channels),
+            nn.ReLU(),
+            nn.Linear(out_channels, out_channels)
+        )
+        self.velocity_proj = nn.Linear(out_channels, out_channels)
 
     def forward(self, x):
         x = self.conv(x)
         x = self.upsample(x)
-        x = self.transformer_block(x, t=None)  # Pass time step if needed
-        return x
+        
+        x_t = self.time_embedding(x)
+        x = self.transformer_block(x, t=x_t)
+        v = self.velocity_proj(v)
+        return v
 
 
 class TransformerBlock(nn.Module):
