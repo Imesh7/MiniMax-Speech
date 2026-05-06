@@ -5,6 +5,7 @@ import torch.nn as nn
 
 class NeuralCodec(nn.Module):
     def __init__(self, input_dim, hidden_dim, output_dim):
+        super().__init__()
         self.encoder = Encoder(
             input_dim, hidden_dim, num_embeddings=1000, embedding_dim=hidden_dim
         )
